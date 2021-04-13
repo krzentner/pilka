@@ -8,6 +8,10 @@ use crate::ash::{
     vk::{self, Handle},
 };
 
+use backtrace::Backtrace;
+use color_backtrace::BacktracePrinter;
+use termcolor::{ColorChoice, StandardStream};
+
 use raw_window_handle::HasRawWindowHandle;
 
 use std::{ffi::CStr, ops::Deref, sync::Arc};
@@ -352,6 +356,14 @@ unsafe extern "system" fn vulkan_debug_callback(
         "{:?}:\n{:?} : {}\n",
         message_severity, message_type, message,
     );
+    if message_severity == vk::DebugUtilsMessageSeverityFlagsEXT::ERROR {
+        BacktracePrinter::new()
+            .print_trace(
+                &Backtrace::new(),
+                &mut StandardStream::stderr(ColorChoice::Auto),
+            )
+            .ok();
+    }
 
     vk::FALSE
 }
